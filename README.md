@@ -22,7 +22,7 @@ This tool helps calculate resistor values (R1, R2, R3) for a non-inverting Schmi
 
 ---
 
-## 🧮 Python Calculator
+## 🧮 Python Calculator without inputs
 
 ```python
 def schmitt_trigger_resistors(V_UT, hysteresis, V_ref=5.0, Vcc=5.0, R123=10000):
@@ -53,7 +53,7 @@ for t in triggers:
     print(f"  R1 = {R1} Ω, R2 = {R2} Ω, R3 = {R3} Ω\\n")
 
 
-## 🧪 Output Example
+## 🧪 Output Example 1
 
 ```
 For V_UT=3.25V and H=0.2V:
@@ -64,6 +64,78 @@ For V_UT=3.25V and H=0.2V:
 For V_UT=1.8V and H=0.2V:
   R1 = 15625.0 Ω, R2 = 31250.0 Ω, R3 = 250000.0 Ω
 ```
+
+## 🧮 Python Calculator with CL Inputs
+
+```python
+def schmitt_trigger_resistors(V_UT, hysteresis, V_ref=5.0, Vcc=5.0, R123=10000):
+    V_LT = V_UT - hysteresis
+
+    # Calculate R3 and R2
+    R3 = R123 / ((V_UT - V_LT) / Vcc)
+    R2 = R123 / (V_LT / V_ref)
+
+    # Calculate R1 using parallel resistance formula
+    inv_R1 = (1 / R123) - (1 / R2) - (1 / R3)
+
+    if inv_R1 <= 0:
+        raise ValueError(
+            "Invalid combination of V_UT, hysteresis and R123."
+        )
+
+    R1 = 1 / inv_R1
+
+    return R1, R2, R3
+
+
+print("\nSchmitt Trigger Resistor Calculator\n")
+
+V_UT = float(input("Enter Upper Trigger Voltage V_UT (V): "))
+hysteresis = float(input("Enter Hysteresis (V): "))
+
+V_ref_input = input("Enter Reference Voltage V_REF (default 5V): ")
+Vcc_input = input("Enter Output High Voltage VCC (default 5V): ")
+R123_input = input("Enter R123 = R1||R2||R3 (default 10000 ohms): ")
+
+V_ref = float(V_ref_input) if V_ref_input else 5.0
+Vcc = float(Vcc_input) if Vcc_input else 5.0
+R123 = float(R123_input) if R123_input else 10000.0
+
+R1, R2, R3 = schmitt_trigger_resistors(
+    V_UT,
+    hysteresis,
+    V_ref,
+    Vcc,
+    R123
+)
+
+print("\nResults")
+print("-------")
+print(f"Lower Trigger Voltage (V_LT) = {V_UT - hysteresis:.3f} V")
+print(f"R1 = {R1:.2f} Ω")
+print(f"R2 = {R2:.2f} Ω")
+print(f"R3 = {R3:.2f} Ω")
+```
+
+## 🧪 Output Example 2
+
+```
+Schmitt Trigger Resistor Calculator
+
+Enter Upper Trigger Voltage V_UT (V): 1.8
+Enter Hysteresis (V): 0.2
+Enter Reference Voltage V_REF (default 5V):
+Enter Output High Voltage VCC (default 5V):
+Enter R123 = R1||R2||R3 (default 10000 ohms):
+
+Results
+-------
+Lower Trigger Voltage (V_LT) = 1.600 V
+R1 = 15625.00 Ω
+R2 = 31250.00 Ω
+R3 = 250000.00 Ω
+```
+
 ## 🔗 Useful Links
 
 - 🌐 Original reference: [HyperPhysics - Schmitt Trigger](http://hyperphysics.phy-astr.gsu.edu/hbase/Electronic/schmitt.html#c2)

@@ -1,9 +1,9 @@
 ﻿# Inverting-Schmitt-trigger-calculator-py
-![Alt text](schmitt.png)
-![Alt text](schmitt3.png)
-![Alt text](schmitt5.png)
-![Alt text](schmitt6.png)
-![Alt text](V.png)
+![Alt text](schmitt.jpg)
+![Alt text](schmitt3.jpg)
+![Alt text](schmitt5.jpg)
+![Alt text](schmitt6.jpg)
+![Alt text](V.jpg)
 
 # Schmitt Trigger Resistor Calculator
 

@@ -52,6 +52,7 @@ for t in triggers:
     print(f"For V_UT={t['V_UT']}V and H={t['hysteresis']}V:")
     print(f"  R1 = {R1} Ω, R2 = {R2} Ω, R3 = {R3} Ω\\n")
 
+```
 
 ## 🧪 Output Example 1
 

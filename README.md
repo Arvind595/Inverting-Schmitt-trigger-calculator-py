@@ -3,7 +3,7 @@
 ![Alt text](schmitt3.jpg)
 ![Alt text](schmitt5.jpg)
 ![Alt text](schmitt6.jpg)
-![Alt text](V.jpg)
+![Alt text](V.png)
 
 # Schmitt Trigger Resistor Calculator
 
@@ -64,3 +64,7 @@ For V_UT=3.25V and H=0.2V:
 For V_UT=1.8V and H=0.2V:
   R1 = 15625.0 Ω, R2 = 31250.0 Ω, R3 = 250000.0 Ω
 ```
+## 🔗 Useful Links
+
+- 🌐 Original reference: [HyperPhysics - Schmitt Trigger](http://hyperphysics.phy-astr.gsu.edu/hbase/Electronic/schmitt.html#c2)
+- 🐍 Online Python compiler: [Programiz](https://www.programiz.com/python-programming/online-compiler/)

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Schmitt Trigger Calculator</title>
+<style>
+:root{--bg:#f4f6f3;--fg:#17201b;--card:#fff;--mut:#5d6b62;--ac:#0a7a4f;--bd:#cfd8d1;--err:#b3261e}
+@media(prefers-color-scheme:dark){:root{--bg:#111713;--fg:#e4ece6;--card:#1a221d;--mut:#92a398;--ac:#4fd39a;--bd:#2f3b33;--err:#ff8a80}}
+*{box-sizing:border-box}
+body{margin:0;padding:16px;background:var(--bg);color:var(--fg);font:16px/1.5 Georgia,"Times New Roman",serif}
+main{max-width:720px;margin:0 auto}
+h1{font-size:1.6rem;margin:.4rem 0 .2rem}
+p.s{margin:0 0 1rem;color:var(--mut)}
+code,input,select,td,th,.eq{font-family:ui-monospace,Consolas,Menlo,monospace}
+.eq{font-size:.82rem;color:var(--mut);overflow-x:auto;white-space:pre;border-left:3px solid var(--ac);padding:.2rem .7rem;margin:.5rem 0 1rem}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tabs button{flex:1;padding:.6rem;border:1px solid var(--bd);background:var(--card);color:var(--fg);font:inherit;cursor:pointer;border-radius:6px}
+.tabs button[aria-selected=true]{background:var(--ac);color:var(--bg);border-color:var(--ac)}
+.box{background:var(--card);border:1px solid var(--bd);border-radius:6px;padding:14px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+label{display:block;font-size:.85rem;color:var(--mut)}
+input,select{width:100%;padding:.45rem;border:1px solid var(--bd);border-radius:4px;background:var(--bg);color:var(--fg);font-size:.95rem}
+:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{text-align:right;padding:.35rem .4rem;border-bottom:1px solid var(--bd)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mut);font-weight:normal}
+#err{color:var(--err);min-height:1.4em;margin:0 0 .5rem}
+.n{font-size:.82rem;color:var(--mut)}
+</style></head><body><main>
+<h1>Schmitt trigger calculator</h1>
+<p class="s">Resistor design and threshold analysis, with nearest standard values.</p>
+<div class="eq">V_UT = R123·(Vref/R2 + Voh/R3)
+V_LT = R123·(Vref/R2 + Vol/R3)
+R123 = R1‖R2‖R3</div>
+<div class="tabs" role="tablist">
+<button role="tab" id="t1" aria-selected="true">Design resistors</button>
+<button role="tab" id="t2" aria-selected="false">Analyze resistors</button></div>
+<div class="box"><div class="grid">
+<div><label for="voh">Voh (V)</label><input id="voh" value="5"></div>
+<div><label for="vol">Vol (V)</label><input id="vol" value="-5"></div>
+<div><label for="vref">Vref (V)</label><input id="vref" value="5"></div>
+<div><label for="ser">Resistor series</label><select id="ser"><option>E12</option><option selected>E24</option><option>E96</option></select></div>
+</div><div class="grid" id="d" style="margin-top:10px">
+<div><label for="vut">V_UT (V)</label><input id="vut" value="3"></div>
+<div><label for="vlt">V_LT (V)</label><input id="vlt" value="2"></div>
+<div><label for="r123">R123 (Ω)</label><input id="r123" value="10k"></div>
+</div><div class="grid" id="a" style="margin-top:10px" hidden>
+<div><label for="r1">R1 (Ω)</label><input id="r1" value="25k"></div>
+<div><label for="r2">R2 (Ω)</label><input id="r2" value="20k"></div>
+<div><label for="r3">R3 (Ω)</label><input id="r3" value="100k"></div>
+</div>
+<p class="n">Resistors accept k, M, G (e.g. 4.7k). Single supply: set Vol = 0. R123 is a free choice and must be smaller than R1, R2 and R3.</p></div>
+<p id="err" role="alert"></p>
+<div class="box"><table id="rt"></table></div>
+<div class="box"><table id="vt"></table></div>
+</main>
+<script>
+const E={E12:[1,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2],
+E24:[1,1.1,1.2,1.3,1.5,1.6,1.8,2,2.2,2.4,2.7,3,3.3,3.6,3.9,4.3,4.7,5.1,5.6,6.2,6.8,7.5,8.2,9.1],
+E96:[100,102,105,107,110,113,115,118,121,124,127,130,133,137,140,143,147,150,154,158,162,165,169,174,178,182,187,191,196,200,205,210,215,221,226,232,237,243,249,255,261,267,274,280,287,294,301,309,316,324,332,340,348,357,365,374,383,392,402,412,422,432,442,453,464,475,487,499,511,523,536,549,562,576,590,604,619,634,649,665,681,698,715,732,750,768,787,806,825,845,866,887,909,931,953,976].map(v=>v/100)};
+const $=id=>document.getElementById(id);
+const V=id=>{const x=parseFloat($(id).value);if(isNaN(x))throw Error("Enter a number for "+id.toUpperCase()+".");return x};
+const R=id=>{const m=$(id).value.trim().toLowerCase().replace(/ω|ohm|\s/g,"").match(/^([\d.]+(?:e-?\d+)?)([kmgr]?)$/);
+if(!m)throw Error("Enter a resistance for "+id.toUpperCase()+", e.g. 4.7k.");return +m[1]*{k:1e3,m:1e6,g:1e9,r:1,"":1}[m[2]]};
+const fR=r=>r>=1e6?+(r/1e6).toPrecision(4)+" MΩ":r>=1e3?+(r/1e3).toPrecision(4)+" kΩ":+r.toPrecision(4)+" Ω";
+const nearest=(r,s)=>{const d=Math.floor(Math.log10(r));let b,be=1e9;
+for(const k of [d-1,d,d+1])for(const m of E[s]){const c=m*10**k,e=Math.abs(Math.log(c/r));if(e<be){be=e;b=c}}return +b.toPrecision(3)};
+function design(voh,vol,vut,vlt,vref,r123){
+if(voh<=vol)throw Error("Voh must be greater than Vol.");
+if(vut<=vlt)throw Error("V_UT must be greater than V_LT.");
+const r3=r123*(voh-vol)/(vut-vlt),den=voh*vlt-vol*vut,r2=r123*vref*(voh-vol)/den;
+if(!vref||!den||!(r2>0)||!isFinite(r2))throw Error("Thresholds unreachable with this Vref and output swing (R2 would be negative or infinite).");
+const inv=1/r123-1/r2-1/r3;if(!(inv>0))throw Error("R1 would be negative or infinite. Use a smaller R123.");
+return[1/inv,r2,r3]}
+function analyze(r1,r2,r3,voh,vol,vref){
+const r=1/(1/r1+1/r2+1/r3),ut=r*(vref/r2+voh/r3),lt=r*(vref/r2+vol/r3);return[ut,lt,ut-lt]}
+let mode=1;
+function tab(n){mode=n;$("t1").setAttribute("aria-selected",n==1);$("t2").setAttribute("aria-selected",n==2);$("d").hidden=n!=1;$("a").hidden=n!=2;calc()}
+function calc(){
+try{$("err").textContent="";
+const voh=V("voh"),vol=V("vol"),vref=V("vref"),s=$("ser").value;
+const r=mode==1?design(voh,vol,V("vut"),V("vlt"),vref,R("r123")):[R("r1"),R("r2"),R("r3")];
+if(r.some(x=>!(x>0)))throw Error("Resistors must be positive.");
+const st=r.map(x=>nearest(x,s));
+$("rt").innerHTML="<tr><th></th><th>Exact</th><th>Nearest "+s+"</th><th>Error</th></tr>"+
+["R1","R2","R3"].map((n,i)=>`<tr><td>${n}</td><td>${fR(r[i])}</td><td>${fR(st[i])}</td><td>${((st[i]/r[i]-1)*100).toFixed(2)}%</td></tr>`).join("");
+const a=analyze(...r,voh,vol,vref),b=analyze(...st,voh,vol,vref);
+$("vt").innerHTML="<tr><th></th><th>Exact R</th><th>Standard R</th></tr>"+
+["V_UT","V_LT","V_hys"].map((n,i)=>`<tr><td>${n}</td><td>${a[i].toFixed(3)} V</td><td>${b[i].toFixed(3)} V</td></tr>`).join("")}
+catch(e){$("err").textContent=e.message;$("rt").innerHTML=$("vt").innerHTML=""}}
+$("t1").onclick=()=>tab(1);$("t2").onclick=()=>tab(2);
+document.querySelectorAll("input,select").forEach(e=>e.addEventListener("input",calc));
+calc();
+</script></body></html>
